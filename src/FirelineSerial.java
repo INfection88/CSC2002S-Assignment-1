@@ -55,7 +55,7 @@ public class FirelineSerial {
 
             if (outputPrefix.isEmpty()) {
                 throw new IllegalArgumentException(
-                        "The output prefix may not be empty.");
+                        "The output prefix may not be empty."); 
             }
 
             FireMap map = new FireMap(
