@@ -1,18 +1,22 @@
 import java.util.concurrent.*;
-import java.util.Arrays;
-import java.util.ArrayList;
 
-
-
-
-
-
-public class FirelineParallel extends Thread{
+public class FirelineParallel extends RecursiveAction{
 
     private static final int DEFAULT_MAXIMUM_STEPS = 5_000;
     private static final double DEFAULT_TOLERANCE = 0.05;
     private static final int CUTOFF = 50;
 
+    private int start;
+    private int end;
+    private FireMap map;
+
+    public FirelineParallel(FireMap map, int start, int end) {
+
+        this.map = map;
+        this.start = start;
+        this.end = end;
+
+    }
     public static void main(String[] args) {
         if (args.length < 5 || args.length > 11 || (args.length > 8 && args.length < 11)) {
             printUsage();
@@ -62,22 +66,11 @@ public class FirelineParallel extends Thread{
             boolean converged = false;
 
             ForkJoinPool pool = new ForkJoinPool(8);
-
-            //This is the code block that needs to be changed
             while (stepsCompleted < maximumSteps) {
-                result = map.step(mode);
-                stepsCompleted++;
 
-                if (mode == FireMap.Mode.WILDFIRE) {
-                    converged = result.getBurningCells() == 0
-                            && result.getMaximumTemperatureChange() < tolerance;
-                } else {
-                    converged = result.getMaximumTemperatureChange() < tolerance;
-                }
-
-                if (converged) {
-                    break;
-                }
+                FirelineParallel ParallelTask= new FirelineParallel(map, 0, map.getRows());
+                pool.execute(ParallelTask) ;
+                ParallelTask.join();
             }
 
             long endTime = System.nanoTime();
@@ -126,6 +119,23 @@ public class FirelineParallel extends Thread{
             exception.printStackTrace();
             System.exit(1);
         }
+    }
+
+    @Override
+    protected void compute() {
+        if(end - start <= CUTOFF) {
+            map.updateRegion(FireMap.Mode.WILDFIRE, start, end,0,0);
+            return;
+        }
+
+        int mid = (start + end)/2;
+
+        FirelineParallel ThreadA = new FirelineParallel(map, start, mid);
+        FirelineParallel ThreadB = new FirelineParallel(map, mid,end);
+
+        ThreadA.fork();
+        ThreadB.compute();
+        ThreadA.join();
     }
 
     private static int parsePositiveInteger(String value, String name) {
