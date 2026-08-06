@@ -7,10 +7,11 @@ import java.util.ArrayList;
 
 
 
-public class FirelineSerial {
+public class FirelineParallel extends Thread{
 
     private static final int DEFAULT_MAXIMUM_STEPS = 5_000;
     private static final double DEFAULT_TOLERANCE = 0.05;
+    private static final int CUTOFF = 50;
 
     public static void main(String[] args) {
         if (args.length < 5 || args.length > 11 || (args.length > 8 && args.length < 11)) {
@@ -60,6 +61,9 @@ public class FirelineSerial {
             int stepsCompleted = 0;
             boolean converged = false;
 
+            ForkJoinPool pool = new ForkJoinPool(8);
+
+            //This is the code block that needs to be changed
             while (stepsCompleted < maximumSteps) {
                 result = map.step(mode);
                 stepsCompleted++;
