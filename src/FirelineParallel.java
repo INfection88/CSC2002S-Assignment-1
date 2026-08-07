@@ -1,6 +1,6 @@
 import java.util.concurrent.*;
 
-public class FirelineParallel extends RecursiveAction{
+public class FirelineParallel extends RecursiveTask<FireMap.StepResult>{
 
     private static final int DEFAULT_MAXIMUM_STEPS = 5_000;
     private static final double DEFAULT_TOLERANCE = 0.05;
@@ -9,10 +9,12 @@ public class FirelineParallel extends RecursiveAction{
     private int start;
     private int end;
     private FireMap map;
+    private FireMap.Mode mode;
 
-    public FirelineParallel(FireMap map, int start, int end) {
+    public FirelineParallel(FireMap map,FireMap.Mode mode, int start, int end) {
 
         this.map = map;
+        this.mode = mode;
         this.start = start;
         this.end = end;
 
@@ -68,17 +70,34 @@ public class FirelineParallel extends RecursiveAction{
             ForkJoinPool pool = new ForkJoinPool(8);
             while (stepsCompleted < maximumSteps) {
 
-                FirelineParallel ParallelTask= new FirelineParallel(map, 0, map.getRows());
-                pool.execute(ParallelTask) ;
-                ParallelTask.join();
-            }
+                map.prepareNextState();
 
+                FirelineParallel ParallelTask = new FirelineParallel(map,mode,1,map.getRows() -1);
+
+                result = pool.submit(ParallelTask).join();
+
+                map.completeStep();
+                stepsCompleted++;
+
+                 if (mode == FireMap.Mode.WILDFIRE) {
+                    converged = result.getBurningCells() == 0
+                            && result.getMaximumTemperatureChange() < tolerance;
+                } else {
+                    converged = result.getMaximumTemperatureChange() < tolerance;
+                }
+
+                if (converged) {
+                    break;
+                }
+
+            }
+            pool.shutdown();
             long endTime = System.nanoTime();
             double elapsedMilliseconds = (endTime - startTime) / 1_000_000.0;
 
             map.writeImages(outputPrefix);
 
-            System.out.println("Fireline serial simulation");
+            System.out.println("Fireline Parallel ation");
             System.out.printf("Mode: %s%n", mode.name().toLowerCase());
             System.out.printf("Rows: %d, Columns: %d%n", rows, columns);
             System.out.printf("Random seed: %d%n", seed);
@@ -122,20 +141,25 @@ public class FirelineParallel extends RecursiveAction{
     }
 
     @Override
-    protected void compute() {
+    protected FireMap.StepResult compute() {
         if(end - start <= CUTOFF) {
-            map.updateRegion(FireMap.Mode.WILDFIRE, start, end,0,0);
-            return;
+            return map.updateRegion(mode, start, end,1,map.getColumns() -1);
+            
         }
 
         int mid = (start + end)/2;
 
-        FirelineParallel ThreadA = new FirelineParallel(map, start, mid);
-        FirelineParallel ThreadB = new FirelineParallel(map, mid,end);
+        FirelineParallel ThreadA = new FirelineParallel(map,mode, start, mid);
+        FirelineParallel ThreadB = new FirelineParallel(map,mode, mid,end);
 
         ThreadA.fork();
-        ThreadB.compute();
-        ThreadA.join();
+
+        FireMap.StepResult resultB = ThreadB.compute();
+        FireMap.StepResult resultA = ThreadA.join();
+        
+        return FireMap.StepResult.combine(resultB,resultA);
+        
+
     }
 
     private static int parsePositiveInteger(String value, String name) {
@@ -166,17 +190,19 @@ public class FirelineParallel extends RecursiveAction{
 
     private static void printUsage() {
         System.err.println(
-                "Usage: java FirelineSerial <rows> <columns> <seed> "
+                "Usage: java FirelineParallel <rows> <columns> <seed> "
                 + "<diffusion|wildfire> <output-prefix> "
                 + "[max-steps] [tolerance] [mixed|grass] "
                 + "[ignition-top-row ignition-left-column patch-size]");
         System.err.println("Examples:");
         System.err.println(
-                "  java FirelineSerial 300 300 42 wildfire "
+                "  java FirelineParallel 300 300 42 wildfire "
                 + "output/fireline");
         System.err.println(
-                "  java FirelineSerial 2000 2000 17 wildfire "
+                "  java FirelineParallel 2000 2000 17 wildfire "
                 + "output/benchmark 50000 0.05 grass 20 20 9");
     }
+
+    
 
 }
