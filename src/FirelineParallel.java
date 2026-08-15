@@ -1,3 +1,17 @@
+/**
+ * A Parallel version of the FireLine project that will send data to the FireMap.java file to create a map using the FORKJOINPOOL framework
+ * @author Tauriq Petersen
+ * @version 7b6d2e52f0ebd2221fca77e5ef6973de2a614a2a
+ * 
+ * Due Date: 24/08/2026
+ * 
+ */
+
+
+
+
+
+
 import java.util.concurrent.*;
 
 public class FirelineParallel extends RecursiveTask<FireMap.StepResult>{
@@ -58,19 +72,23 @@ public class FirelineParallel extends RecursiveTask<FireMap.StepResult>{
                         "The output prefix may not be empty."); 
             }
 
+            // Here we instantiate a new FireMap object to parse data into
             FireMap map = new FireMap(
                     rows, columns, seed, mode, landscape,
                     ignitionTopRow, ignitionLeftColumn, ignitionPatchSize);
 
-            long startTime = System.nanoTime();
+            long startTime = System.nanoTime(); 
             FireMap.StepResult result = null;
             int stepsCompleted = 0;
             boolean converged = false;
 
+            // Create a ForkJoinPool object that creates a pool of threads so it can be used in the following code
             ForkJoinPool pool = new ForkJoinPool(8);
             while (stepsCompleted < maximumSteps) {
 
                 map.prepareNextState();
+                // Create a new FirelineParallel object that contains the map, mode, and how the grid gets parsed:
+                    // -> SO for this example, we will do do it in linear strips. ie: [x_1 , x_2 , x_3 , x_4 , x_5 , ...., x_n] => a new task.
 
                 FirelineParallel ParallelTask = new FirelineParallel(map,mode,1,map.getRows() -1);
 
@@ -141,7 +159,22 @@ public class FirelineParallel extends RecursiveTask<FireMap.StepResult>{
     }
 
     @Override
+    /***
+     * @param none
+     * 
+     * DESCRIPTION:
+     * -> This method (derived from the RecursiveTask class) is overriden to run and combine threads.
+     *    We use the SEQUENCIAL CUTOFF defined above to stop and return the map reigon after end- start is less or equal to the 
+     *    cutoff 
+     * 
+     *    If this is not met, we compute the midpoint of the array and create 2 threads with bounds above and below the midpoint 
+     *    respectively, we fork Thread A and compute Thread B, such that Thread B will compute first and then Thread A will 
+     *    follow after, with the final step result being computed with the combine method of FireMap.stepResult
+     * 
+     * 
+     */
     protected FireMap.StepResult compute() {
+     
         if(end - start <= CUTOFF) {
             return map.updateRegion(mode, start, end,1,map.getColumns() -1);
             
