@@ -1,0 +1,2 @@
+BENCHMARK:           RUN 1 (SEQ-CUT = 50)              RUN 2 (SEQ-CUT = 75)             RUN 3 (SEQ-CUT = 100)               RUN 4 (SEQ-CUT = 125)           RUN 5 (SEQ-CUT = 150)                       
+                          
