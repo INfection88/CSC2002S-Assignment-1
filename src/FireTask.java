@@ -4,20 +4,20 @@ import java.util.concurrent.*;
 
 public class FireTask extends RecursiveTask<FireMapParallel.StepResult> {
 
-    private static final int CUTOFF = 50;
-
     private int start;
     private int end;
     private FireMapParallel map;
     private FireMapParallel.Mode mode;
+    private int CUTOFF;
 
 
-     public FireTask(FireMapParallel map,FireMapParallel.Mode mode, int start, int end) {
+     public FireTask(FireMapParallel map,FireMapParallel.Mode mode, int start, int end, int CUTOFF) {
 
         this.map = map;
         this.mode = mode;
         this.start = start;
         this.end = end;
+        this.CUTOFF = CUTOFF;
 
     }
 
@@ -31,8 +31,8 @@ public class FireTask extends RecursiveTask<FireMapParallel.StepResult> {
 
         int mid = (start + end)/2;
 
-        FireTask TaskA = new FireTask(map,mode, start, mid);
-        FireTask TaskB = new FireTask(map,mode, mid,end);
+        FireTask TaskA = new FireTask(map,mode, start, mid, CUTOFF);
+        FireTask TaskB = new FireTask(map,mode, mid,end, CUTOFF);
 
         TaskA.fork();
 

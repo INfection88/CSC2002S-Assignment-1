@@ -36,7 +36,7 @@ with open(file_path_input,"r", encoding="utf-8") as file:
 for i in range(1):
     timings = []
     for j in range(5):
-        new_Cutoff = Seq_cutoff + 25*j
+        new_Cutoff = Seq_cutoff + 50*j
         ARGS_String = Array[i] + " " +str(new_Cutoff)
 
         if i != 0 or i != 1 :
