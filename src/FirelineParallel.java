@@ -1,38 +1,9 @@
-/**
- * A Parallel version of the FireLine project that will send data to the FireMap.java file to create a map using the FORKJOINPOOL framework
- * @author Tauriq Petersen
- * @version 7b6d2e52f0ebd2221fca77e5ef6973de2a614a2a
- * 
- * Due Date: 24/08/2026
- * 
- */
-
-
-
-
-
-
 import java.util.concurrent.*;
-
-public class FirelineParallel extends RecursiveTask<FireMap.StepResult>{
+public class FirelineParallel{
 
     private static final int DEFAULT_MAXIMUM_STEPS = 5_000;
     private static final double DEFAULT_TOLERANCE = 0.05;
-    private static final int CUTOFF = 50;
 
-    private int start;
-    private int end;
-    private FireMap map;
-    private FireMap.Mode mode;
-
-    public FirelineParallel(FireMap map,FireMap.Mode mode, int start, int end) {
-
-        this.map = map;
-        this.mode = mode;
-        this.start = start;
-        this.end = end;
-
-    }
     public static void main(String[] args) {
         if (args.length < 5 || args.length > 11 || (args.length > 8 && args.length < 11)) {
             printUsage();
@@ -43,7 +14,7 @@ public class FirelineParallel extends RecursiveTask<FireMap.StepResult>{
             int rows = parsePositiveInteger(args[0], "rows");
             int columns = parsePositiveInteger(args[1], "columns");
             long seed = Long.parseLong(args[2]);
-            FireMap.Mode mode = FireMap.Mode.fromString(args[3]);
+            FireMapParallel.Mode mode = FireMapParallel.Mode.fromString(args[3]);
             String outputPrefix = args[4].trim();
             int maximumSteps = args.length >= 6
                     ? parsePositiveInteger(args[5], "maximum steps")
@@ -51,9 +22,9 @@ public class FirelineParallel extends RecursiveTask<FireMap.StepResult>{
             double tolerance = args.length >= 7
                     ? parsePositiveDouble(args[6], "tolerance")
                     : DEFAULT_TOLERANCE;
-            FireMap.Landscape landscape = args.length >= 8
-                    ? FireMap.Landscape.fromString(args[7])
-                    : FireMap.Landscape.MIXED;
+            FireMapParallel.Landscape landscape = args.length >= 8
+                    ? FireMapParallel.Landscape.fromString(args[7])
+                    : FireMapParallel.Landscape.MIXED;
 
             Integer ignitionTopRow = null;
             Integer ignitionLeftColumn = null;
@@ -73,12 +44,12 @@ public class FirelineParallel extends RecursiveTask<FireMap.StepResult>{
             }
 
             // Here we instantiate a new FireMap object to parse data into
-            FireMap map = new FireMap(
+            FireMapParallel map = new FireMapParallel(
                     rows, columns, seed, mode, landscape,
                     ignitionTopRow, ignitionLeftColumn, ignitionPatchSize);
 
             long startTime = System.nanoTime(); 
-            FireMap.StepResult result = null;
+            FireMapParallel.StepResult result = null;
             int stepsCompleted = 0;
             boolean converged = false;
 
@@ -87,17 +58,15 @@ public class FirelineParallel extends RecursiveTask<FireMap.StepResult>{
             while (stepsCompleted < maximumSteps) {
 
                 map.prepareNextState();
-                // Create a new FirelineParallel object that contains the map, mode, and how the grid gets parsed:
-                    // -> SO for this example, we will do do it in linear strips. ie: [x_1 , x_2 , x_3 , x_4 , x_5 , ...., x_n] => a new task.
 
-                FirelineParallel ParallelTask = new FirelineParallel(map,mode,1,map.getRows() -1);
+                FireTask ParallelTask = new FireTask(map,mode,1, map.getRows() -1);
 
                 result = pool.submit(ParallelTask).join();
 
                 map.completeStep();
                 stepsCompleted++;
 
-                 if (mode == FireMap.Mode.WILDFIRE) {
+                 if (mode == FireMapParallel.Mode.WILDFIRE) {
                     converged = result.getBurningCells() == 0
                             && result.getMaximumTemperatureChange() < tolerance;
                 } else {
@@ -115,7 +84,7 @@ public class FirelineParallel extends RecursiveTask<FireMap.StepResult>{
 
             map.writeImages(outputPrefix);
 
-            System.out.println("Fireline Parallel ation");
+            System.out.println("Fireline Parallel Simulation");
             System.out.printf("Mode: %s%n", mode.name().toLowerCase());
             System.out.printf("Rows: %d, Columns: %d%n", rows, columns);
             System.out.printf("Random seed: %d%n", seed);
@@ -156,43 +125,6 @@ public class FirelineParallel extends RecursiveTask<FireMap.StepResult>{
             exception.printStackTrace();
             System.exit(1);
         }
-    }
-
-    @Override
-    /***
-     * @param none
-     * 
-     * DESCRIPTION:
-     * -> This method (derived from the RecursiveTask class) is overriden to run and combine threads.
-     *    We use the SEQUENCIAL CUTOFF defined above to stop and return the map reigon after end- start is less or equal to the 
-     *    cutoff 
-     * 
-     *    If this is not met, we compute the midpoint of the array and create 2 threads with bounds above and below the midpoint 
-     *    respectively, we fork Thread A and compute Thread B, such that Thread B will compute first and then Thread A will 
-     *    follow after, with the final step result being computed with the combine method of FireMap.stepResult
-     * 
-     * 
-     */
-    protected FireMap.StepResult compute() {
-     
-        if(end - start <= CUTOFF) {
-            return map.updateRegion(mode, start, end,1,map.getColumns() -1);
-            
-        }
-
-        int mid = (start + end)/2;
-
-        FirelineParallel ThreadA = new FirelineParallel(map,mode, start, mid);
-        FirelineParallel ThreadB = new FirelineParallel(map,mode, mid,end);
-
-        ThreadA.fork();
-
-        FireMap.StepResult resultB = ThreadB.compute();
-        FireMap.StepResult resultA = ThreadA.join();
-        
-        return FireMap.StepResult.combine(resultB,resultA);
-        
-
     }
 
     private static int parsePositiveInteger(String value, String name) {
