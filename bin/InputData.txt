@@ -6,26 +6,26 @@
 500 500 5 wildfire output/run5 50000 0.05 mixed 
 600 600 5 wildfire output/run5 50000 0.05 mixed 
 700 700 5 wildfire output/run5 50000 0.05 mixed 
-200 200 5 wildfire output/run5 50000 0.05 defualt
-300 300 5 wildfire output/run5 50000 0.05 default 
-400 400 5 wildfire output/run5 50000 0.05 default
-500 500 5 wildfire output/run5 50000 0.05 default
-600 600 5 wildfire output/run5 50000 0.05 default 
-700 700 5 wildfire output/run5 50000 0.05 default 
+200 200 5 wildfire output/run5 50000 0.05 grass
+300 300 5 wildfire output/run5 50000 0.05 grass 
+400 400 5 wildfire output/run5 50000 0.05 grass
+500 500 5 wildfire output/run5 50000 0.05 grass
+600 600 5 wildfire output/run5 50000 0.05 grass 
+700 700 5 wildfire output/run5 50000 0.05 grass 
+200 200 5 diffusion output/run5 50000 0.05 mixed
+300 300 5 diffusion output/run5 50000 0.05 mixed 
+400 400 5 diffusion output/run5 50000 0.05 mixed
+500 500 5 diffusion output/run5 50000 0.05 mixed 
+600 600 5 diffusion output/run5 50000 0.05 mixed
+700 700 5 diffusion output/run5 50000 0.05 mixed
+800 800 5 diffusion output/run5 50000 0.05 mixed
+900 900 5 diffusion output/run5 50000 0.05 mixed
 200 200 5 diffusion output/run5 50000 0.05 grass
 300 300 5 diffusion output/run5 50000 0.05 grass 
-400 400 5 diffusion output/run5 50000 0.05 grass
+400 400 5 diffusion output/run5 50000 0.05 grass 
 500 500 5 diffusion output/run5 50000 0.05 grass 
-600 600 5 diffusion output/run5 50000 0.05 grass
+600 600 5 diffusion output/run5 50000 0.05 grass 
 700 700 5 diffusion output/run5 50000 0.05 grass 
-800 800 5 diffusion output/run5 50000 0.05 grass 
-900 900 5 diffusion output/run5 50000 0.05 grass
-200 200 5 diffusion output/run5 50000 0.05 default
-300 300 5 diffusion output/run5 50000 0.05 default 
-400 400 5 diffusion output/run5 50000 0.05 default 
-500 500 5 diffusion output/run5 50000 0.05 default 
-600 600 5 diffusion output/run5 50000 0.05 default 
-700 700 5 diffusion output/run5 50000 0.05 default 
 
 
 

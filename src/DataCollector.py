@@ -4,9 +4,7 @@ A test harness to collect data from both FirelineParallel and FirelineSerial Jav
 Author: Tauriq Petersen 
 Date started: 15/08/2026
 """
-
-import numpy as np
-
+# THIS CODE WILL OBTAIN OUTPUT FOR THE SERIAL PROGRAM
 import subprocess
 from pathlib import Path 
 
@@ -14,8 +12,7 @@ script_dir = Path(__file__).parent
 proj_dir = script_dir
 
 file_path_input = script_dir/"InputData.txt"
-file_path_ParallelData = script_dir/"ParallelData.txt"
-Seq_cutoff = 50
+file_path_SerialData = script_dir/"SerialData.txt"
 Array = []
 
 print('Starting script')
@@ -24,23 +21,19 @@ print('Hold on a bit, this may take a while.....')
 with open(file_path_input,"r", encoding="utf-8") as file:
     while True:
         line = file.readline().strip()
-        Array.append(line)
-
-
-        if line:
-            Array.append(line)
 
         if not line:
             break
 
-for i in range(1):
+        Array.append(line)
+
+for i in range(len(Array)):
     timings = []
     for j in range(5):
-        new_Cutoff = Seq_cutoff + 50*j
-        ARGS_String = Array[i] + " " +str(new_Cutoff)
+        ARGS_String = Array[i] 
 
-        if i != 0 or i != 1 :
-            result = subprocess.run(f'make -C "{proj_dir}" run-parallel ARGS="{ARGS_String}"', shell=True, capture_output=True, text=True, check=True)
+        if i != 0 and i != 1 :
+            result = subprocess.run(f'make -C "{proj_dir}" run-serial ARGS="{ARGS_String}"', shell=True, capture_output=True, text=True, check=True)
             output = result.stdout
 
             for line in output.splitlines():
@@ -48,14 +41,23 @@ for i in range(1):
                     timings.append(line.split().pop(3))
 
         else:
-            subprocess.run(f'make -C "{proj_dir}" run-parallel ARGS="{ARGS_String}"', shell=True, capture_output=True, text=True, check=True)
+            subprocess.run(f'make -C "{proj_dir}" run-serial ARGS="{ARGS_String}"', shell=True, capture_output=True, text=True, check=True)
 
+    if ARGS_String.split().pop(3) == "wildfire":
+        if ARGS_String.split().pop(7) == "mixed":
+            StrBuild =  f"{i-1} {(ARGS_String.split()[0] + " X " + ARGS_String.split()[0] + " (WM)"):<25}" + "".join(f"{timing:<35}" for timing in timings)
+        else:
+            StrBuild = f"{i-1} {(ARGS_String.split()[0] + " X " + ARGS_String.split()[0] + " (WG)"):<25}" + "".join(f"{timing:<35}" for timing in timings)
+    else:
+        if ARGS_String.split().pop(7) == "mixed":
+            StrBuild =  f"{i-1} {(ARGS_String.split()[0] + " X " + ARGS_String.split()[0] + " (DM)"):<25}" + "".join(f"{timing:<35}" for timing in timings)
+        else:
+            StrBuild = f"{i-1} {(ARGS_String.split()[0] + " X " + ARGS_String.split()[0] + " (DG)"):<25}" + "".join(f"{timing:<35}" for timing in timings)
 
-    StrBuild =  f"{i-1:<25}" + "".join(f"{timing:<35}" for timing in timings)
-
-    with open(file_path_ParallelData, "a") as file:
+    with open(file_path_SerialData, "a") as file:
         file.write(StrBuild + "\n")
 
+print("Data Capture complete!")
 
 
 
