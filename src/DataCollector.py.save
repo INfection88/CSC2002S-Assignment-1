@@ -4,7 +4,7 @@ A test harness to collect data from both FirelineParallel and FirelineSerial Jav
 Author: Tauriq Petersen 
 Date started: 15/08/2026
 """
-# THIS CODE WILL OBTAIN OUTPUT FOR THE SERIAL PROGRAM ON NIGHTMARE
+# THIS CODE WILL OBTAIN OUTPUT FOR THE SERIAL PROGRAM 
 import subprocess
 from pathlib import Path 
 
@@ -12,7 +12,7 @@ script_dir = Path(__file__).parent
 proj_dir = script_dir
 
 file_path_input = script_dir/"InputData.txt"
-file_path_SerialData = script_dir/"SerialServerData.txt"
+file_path_SerialData = script_dir/"SerialData.txt"
 Array = []
 
 print('Starting script')
